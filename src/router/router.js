@@ -4,6 +4,7 @@ import UserRecipes from "@/pages/UserRecipes.vue";
 import CreateRecipe from "@/pages/CreateRecipe.vue";
 import WatchRecipe from "@/pages/WatchRecipe.vue";
 import Auth from "@/pages/Auth.vue";
+import Advice from "@/pages/Advice.vue";
 import { createRouter, createWebHistory } from "vue-router"
 
 
@@ -31,6 +32,10 @@ const routes = [
     {
         path: '/auth',
         component: Auth
+    },
+    {
+        path: '/advice',
+        component: Advice
     },
 ]
 

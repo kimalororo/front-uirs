@@ -23,4 +23,16 @@ export default {
         padding: 10px 15px;
         margin-top: 15px;
     }
+    .input:hover{
+        transform: scale(1.05);
+    }
+    input:focus {
+    transform: scale(1.05);
+    border: 2px solid #eaf4e8;
+    outline: none; 
+    background-color: #dce7da; 
+    color: #2d4132;
+    font-size: 1.2rem;
+    }
+
 </style>
