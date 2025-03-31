@@ -8,38 +8,50 @@
                 />
             </div>
             <my-input v-if="!hideNav"
-            style="margin-left: 15%; margin-top: 0; width: 40%; 
-            height: 51px; border-radius: 10px;">
-                
+            style="margin-left: 15%; margin-top: 0; width: 40%; height: 51px; border-radius: 10px;">
             </my-input> 
-            <div v-if="!hideNav" class="profile" style="margin-left: 10%;">
+            <div v-if="!hideNav && user" class="profile" style="margin-left: 10%;">
                 <div class="pict">
-                    picture
+                    <img src="../components/icons/mater.png" alt="">
                 </div>
-                <h2 style="margin-left: 20px;">
-                    Nickname
+                <h2 @click="$router.push('/userInfo')" style="margin-left: 20px;">
+                    {{ user.username }}
                 </h2>
-                <div class="pict" style="margin-left: 10px; background-color:crimson;">
-                     LogOut
+                <div class="pict" style="margin-left: 10px; height: 80%;">
+                    <img src="./icons/logout.png" alt="Выйти" @click="logout">
                 </div>
             </div>
-            <div v-else style="margin-left: 20%;">
-                <my-button @click="$router.push('/')">
-                    <template #icon><img src="./icons/home.png" alt="Главная"></template>
-                    Главная
-                </my-button>
+            <div v-else-if="!hideNav" @click="$router.push('/auth')" class="alternative">
+                <h1>Войти</h1>
+            </div>
+            <div v-else @click="$router.push('/')" class="centered-div">
+                <h1>На главную</h1>
             </div>
         </div>
     </div>
 </template>
 
-<script>
-export default{
-computed: {
-    hideNav() {
-            return this.$route.path === "/auth"
-        }
-}
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const hideNav = computed(() => route.path === '/auth')
+
+const user = ref(null)
+
+onMounted(() => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+        user.value = JSON.parse(savedUser) 
+    }
+})
+
+const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    user.value = null 
+    console.log('Выход выполнен')
 }
 </script>
 
@@ -65,27 +77,51 @@ computed: {
 }
 .profile {
     display: flex;
-    width: 22%;
+    width: 25%;
     height: 90px;
-    border: 2px solid #b6d1b2;
+    border: 3px solid #b6d1b2;
     border-radius: 10px;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
 }
 
+.alternative{
+    margin-left: 15%;
+    margin-right: 3%;
+    display: flex;
+    width: 15%;
+    height: 90px;
+    border: 3px solid #b6d1b2;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    color: #dce7da;
+}
+
+.centered-div {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15%;
+    height: 90px;
+    border: 3px solid #b6d1b2;
+    border-radius: 10px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center;
+    color: #dce7da;
+}
 .profile h2{
-    max-width: 55%;
+    max-width: 60%;
     font-size: 1.8rem;
     color: #dce7da;
 }
 
 .pict{
-    height: 75%; 
+    height: 90%; 
     aspect-ratio: 1 / 1; 
     border-radius: 50%; 
-    border-color: black;
-    border: 1px; 
-    background-color: teal;
     margin-left: 10px;
     align-items: center;
     justify-content: center;

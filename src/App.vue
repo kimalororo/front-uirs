@@ -30,6 +30,7 @@ export default {
         padding: 0;
         box-sizing: border-box;
         overflow: hidden;
+        font-family: "Poppins", sans-serif;
     }
 .app {
     position: relative;
@@ -45,7 +46,7 @@ export default {
     width: 100%;
     height: 100%;
     background-image: url('/src/components/icons/paper.jpg');
-    background-color: #f4fdf2; 
+    background-color: #f7faf6; 
     background-blend-mode: multiply; 
     background-size: cover;
     background-position: center;

@@ -60,6 +60,9 @@
   import { ref } from 'vue';
   import axios from 'axios';
   
+  import { useRouter } from 'vue-router';
+  const router = useRouter();
+
   const isRegistering = ref(false);
   const successMessage = ref('');
   const errorMessage = ref('');
@@ -90,9 +93,16 @@
     });
     console.log(loginUsername, loginPassword)
     token.value = response.data.token_type + ' '  + response.data.access_token;
+    localStorage.setItem('token', token.value);
+    localStorage.setItem('user', JSON.stringify({
+      username: loginUsername.value
+    }));
     successMessage.value = 'Вход выполнен успешно!';
     errorMessage.value = '';
-    console.log('Token:', token.value);
+    console.log(token.value);
+    router.push('/').then(() => {
+            window.location.reload();
+        });
   } catch (error) {
     console.log(error);
   }
@@ -107,6 +117,9 @@
       successMessage.value = response.data.message || 'Регистрация успешна!';
       errorMessage.value = '';
       console.log('Register Response:', response.data);
+      loginUsername.value = registerLogin.value;
+      loginPassword.value = registerPassword.value;
+      await handleLogin();
     } catch (error) {
       errorMessage.value = error.response?.data?.message || 'Ошибка регистрации';
     }

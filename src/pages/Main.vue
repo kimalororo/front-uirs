@@ -94,7 +94,7 @@
     border-radius: 0.75rem;
   }
   .rounded-lg img{
-    border-radius: 0.75rem 0 0 0.75rem;
+    border-radius: 0.75rem;
     box-shadow: 12px 11px 36px rgba(0, 0, 0, 0.1);
   }
   .object-cover {
@@ -112,8 +112,8 @@
   .image{
     min-width: 50%;
     max-width: 55%;
-    min-height: 300px;
-    max-height: 400px;
+    min-height: 400px;
+    max-height: 470px;
   }
   .container{
     display: flex;

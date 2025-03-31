@@ -17,10 +17,6 @@
                 <template #icon><img src="./icons/calendar.png" alt="План"></template>
                 Планировщик питания
             </my-button>
-            <my-button @click="$router.push('/auth')">
-                <template #icon><img src="/auth-icon.png" alt="Вход"></template>
-                Вход
-            </my-button>
             <my-button @click="$router.push('/advice')">
                 <template #icon><img src="/auth-icon.png" alt="Советы"></template>
                 Советы
