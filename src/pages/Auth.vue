@@ -68,11 +68,11 @@
   const errorMessage = ref('');
   
   const apiRegister = axios.create({
-    baseURL: 'https://petmeet.space:8443/api/v1',
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1',
     headers: { 'Content-Type': 'application/json' }
   });
   const apiLogin = axios.create({
-    baseURL: 'https://petmeet.space:8443/api/v1',
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1',
     headers: { 'Content-Type': 'multipart/form-data' }
   });
   

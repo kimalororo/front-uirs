@@ -113,10 +113,11 @@
     min-width: 50%;
     max-width: 55%;
     min-height: 400px;
-    max-height: 470px;
+    max-height: 500px;
   }
   .container{
     display: flex;
+    max-height: 500px;
     box-shadow: 16px 17px 14px rgba(0, 0, 0, 0.01), 17px 19px 8px rgba(0, 0, 0, 0.05), 12px 4px 5px rgba(0, 0, 0, 0.09), 12px 11px 36px rgba(0, 0, 0, 0.1);
     width: 90%;
   }

@@ -3,7 +3,7 @@
         <div class="header_el">
             <div class="logo">
                 <img
-                src="../components/icons/logo.png"
+                src="../icons/logo.png"
                 alt="Лого"
                 />
             </div>
@@ -12,13 +12,13 @@
             </my-input> 
             <div v-if="!hideNav && user" class="profile" style="margin-left: 10%;">
                 <div class="pict">
-                    <img src="../components/icons/mater.png" alt="">
+                    <img src="../icons/mater.png" alt="">
                 </div>
                 <h2 @click="$router.push('/userInfo')" style="margin-left: 20px;">
                     {{ user.username }}
                 </h2>
                 <div class="pict" style="margin-left: 10px; height: 80%;">
-                    <img src="./icons/logout.png" alt="Выйти" @click="logout">
+                    <img src="../icons/logout.png" alt="Выйти" @click="logout">
                 </div>
             </div>
             <div v-else-if="!hideNav" @click="$router.push('/auth')" class="alternative">

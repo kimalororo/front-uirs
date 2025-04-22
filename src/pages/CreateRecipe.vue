@@ -260,17 +260,17 @@
   const newTag = ref("");
 
   const recipeApi = axios.create({
-    baseURL: 'https://petmeet.space:8443/api/v1/recipe',
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1/recipe',
     headers: { 'Content-Type': 'multipart/form-data',
                 Authorization: token}
   });
 
   const tagIngridientListApi = axios.create ({
-    baseURL: 'https://petmeet.space:8443/api/v1'
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1'
   })
 
   const addTagApi = axios.create ({
-    baseURL: 'https://petmeet.space:8443/api/v1',
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1',
     headers: {Authorization: token}
   })
 
