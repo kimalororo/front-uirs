@@ -57,25 +57,22 @@
       </div>
     </div>
 
-    <!-- Сетка рецептов -->
     <section class="projects">
-      <h2><strong>Рецепты</strong></h2>
-      <p class="projects-subtitle">Предыдущие рецепты</p>
-      <div class="projects-grid">
-        <div
-          v-for="r in recipes"
-          :key="r.id"
-          class="project-card"
-          @click="openRecipe(r.id)"
-        >
-          <img :src="r.image" alt="" class="project-img" />
-          <div class="project-overlay">
-            <span class="project-name">{{ r.title }}</span>
-            <span class="icon">➔</span>
-          </div>
-        </div>
-      </div>
-    </section>
+  <h2><strong>Рецепты</strong></h2>
+
+  <!-- Новые разделы -->
+  <div class="recipe-overview">
+    <div class="overview-card" @click="goToSaved">
+      <img src="../components/icons/savedRecipes.jpg" alt="Сохраненные рецепты" />
+      <div class="overview-title">Сохранённые рецепты</div>
+    </div> 
+    <div class="overview-card" @click="$router.push('/createdList')">
+      <img src="../components/icons/createdRecipes.jpg" alt="Созданные рецепты" />
+      <div class="overview-title">Созданные рецепты</div>
+    </div>
+  </div>
+  </section>
+
   </div>
 </template>
 
@@ -171,8 +168,6 @@ const logout = () => {
   localStorage.removeItem('user')
   router.push('/auth')
 }
-
-const openRecipe = id => router.push(`/recipes/${id}`)
 
 onMounted(() => {
   if (token) {
@@ -331,32 +326,12 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
-.project-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  cursor: pointer;
-}
 .project-img {
   width: 100%;
   display: block;
   transition: transform 0.3s;
 }
-.project-card:hover .project-img {
-  transform: scale(1.05);
-}
-.project-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+
 .icon {
   font-size: 18px;
 }
@@ -370,4 +345,84 @@ onMounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Блок с двумя разделами */
+.recipe-overview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.overview-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 500px; 
+  margin-bottom: 40px;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.overview-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s;
+}
+
+.overview-card:hover img {
+  transform: scale(1.05);
+}
+
+.overview-title {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: #fff;
+  font-size: 20px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.overview-card {
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.15),
+    0 3px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+
+}
+.overview-card:hover {
+  box-shadow:
+    0 10px 14px rgba(0, 0, 0, 0.18),
+    0 5px 6px rgba(0, 0, 0, 0.12);
+    transform: translateY(-5px);
+}
+
+.overview-card::before,
+.project-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40%; /* высота затемнения: 40% от высоты карточки */
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none; /* чтобы не мешать кликам */
+  z-index: 2;
+}
+
+.overview-title {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 3;
+  color: #fff;
+}
+
 </style>

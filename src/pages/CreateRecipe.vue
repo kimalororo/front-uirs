@@ -430,7 +430,6 @@ const GetIngredients = async () => {
 
 
 const OnUnitsSelectFocus = async () => {
-  console.log("QWEQWE")
   showUnitsSelect.value = true;
   const unitsData = await GetUnits(); 
   console.log(unitsData);

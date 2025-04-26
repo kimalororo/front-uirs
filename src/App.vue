@@ -54,7 +54,7 @@ export default {
 }
 
     .content {
-        flex-grow: 1; /* Контент занимает всю оставшуюся ширину */
+        flex-grow: 1; 
         margin-left: 50px;
         margin-top: 50px;
         overflow: auto;
