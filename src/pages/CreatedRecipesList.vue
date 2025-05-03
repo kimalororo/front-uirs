@@ -21,12 +21,14 @@
     </div>
 
     <!-- Карточки рецептов -->
-    <div v-if="recipes.length" class="cards">
+    <div 
+    v-if="recipes.length" 
+    class="cards">
       <div
         v-for="recipe in recipes"
         :key="recipe.id"
         class="card"
-      >
+        @click="$router.push(`/watch/${recipe.id}`)">
         <div class="card-image-wrapper">
           <img
             :src="getPhotoUrl(recipe.photo_url)"
@@ -39,7 +41,7 @@
           <h3 class="card-description">{{ recipe.description }}</h3>
           <div class="flex">
             <div class="stat">
-              <img src="../components/icons/timer.png" style="height: 40px;" alt="время приготовления"> 
+              <img src="../components/icons/timer.png" style="height: 30px; margin-right: 7px;" alt="время приготовления"> 
               <span style="margin-right: 15px;">{{ getTotalTime(recipe.stages)}}</span>
             </div>
             <div class="stat">
@@ -85,7 +87,8 @@ const recipes = ref([])
 const selectedSort = ref('')
 const sortOptions  = [
   { value: 'true',  name: 'Опубликованные' },
-  { value: 'false', name: 'Черновики' }
+  { value: 'false', name: 'Черновики' },
+  {valie: 'none', name: 'Убрать фильтры'}
 ]
 const page  = 1
 const limit = 20
@@ -163,6 +166,8 @@ onMounted(fetchRecipes)
 }
 .flex {
   display: flex;
+  padding-bottom: 10px;
+  margin-top: auto;
 }
 .knife {
   height: 27px;
@@ -219,7 +224,8 @@ onMounted(fetchRecipes)
   padding-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  flex: 1;
 }
 .card-title {
   font-size: 1.2rem;

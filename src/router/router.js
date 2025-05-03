@@ -28,7 +28,7 @@ const routes = [
         component: CreateRecipe
     },
     {
-        path: '/watch',
+        path: '/watch/:id',
         component: WatchRecipe
     },
     {

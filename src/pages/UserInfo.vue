@@ -93,16 +93,15 @@ const currentPassword = ref('')
 const newPassword = ref('')
 
 // Рецепты и статистика
-const recipes = ref([])
 const stats = ref({ published: 0, liked: 0, drafts: 0 })
 
 // Axios-инстансы
 const api = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user', headers: { Authorization: token } })
-const recipesApi = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user/recipes', headers: { Authorization: token } })
 const updLoginApi = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user', headers: { 'Content-Type': 'multipart/form-data', Authorization: token } })
 const updPasswordApi = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user/change-password', headers: { Authorization: token } })
+const apiCounts  = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/recipe/my', headers: { Authorization: token }})
 
-// Функции загрузки данных
+// Функции загрузки данных 
 const fetchUser = async () => {
   try {
     const { data } = await api.get('')
@@ -111,15 +110,41 @@ const fetchUser = async () => {
     console.error('Ошибка загрузки пользователя:', e)
   }
 }
-const fetchRecipes = async () => {
+
+async function fetchStats() {
   try {
-    const { data } = await recipesApi.get('')
-    recipes.value = data
-    stats.value.published = data.filter(r => r.status === 'published').length
-    stats.value.liked     = data.filter(r => r.liked).length
-    stats.value.drafts    = data.filter(r => r.status === 'draft').length
+    // 1) Опубликованные
+    const resPub = await apiCounts.get('', {
+      params: { is_published: true, page: 1, limit: 1 }
+    })
+    stats.value.published = Number(
+      resPub.headers['x-total-count']
+      || resPub.data.meta?.total
+      || 0
+    )
+    
+    // 2) Черновики
+    const resDraft = await apiCounts.get('', {
+      params: { is_published: false, page: 1, limit: 1 }
+    })
+    stats.value.drafts = Number(
+      resDraft.headers['x-total-count']
+      || resDraft.data.meta?.total
+      || 0
+    )
+    
+    // 3) Понравившиеся
+    // Предполагаем, что бэкенд поддерживает фильтр liked=true
+    const resLiked = await apiCounts.get('', {
+      params: { liked: true, page: 1, limit: 1 }
+    })
+    stats.value.liked = Number(
+      resLiked.headers['x-total-count']
+      || resLiked.data.meta?.total
+      || 0
+    )
   } catch (e) {
-    console.error('Ошибка загрузки рецептов:', e)
+    console.error('Не удалось получить статистику рецептов:', e)
   }
 }
 
@@ -169,10 +194,13 @@ const logout = () => {
   router.push('/auth')
 }
 
-onMounted(() => {
+onMounted(async() => {
   if (token) {
-    fetchUser()
-    fetchRecipes()
+    await fetchStats()
+    await fetchUser()
+  }
+  else {
+    router.push('/auth')
   }
 })
 </script>
