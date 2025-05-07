@@ -92,6 +92,7 @@
           class="ingredient-item"
         >
           <span class="name">{{ item.ingredient.name }}</span>
+          <img class="image_clr" :src="getPhotoUrl(item.ingredient.icons_url)" alt="ingridIcon">
           <span class="dots"></span>
           <span class="quantity">
             {{ item.adjustedQuantity }} {{ item.unit.name }}

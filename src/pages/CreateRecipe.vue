@@ -5,7 +5,12 @@
       <!-- Название рецепта -->
       <h2 class="heading">Введите название вашего рецепта</h2>
       <div style="width: 40%; height: 80px;" class="title">
-        <my-input v-model="recipe.title" class="input" :disableScale="true" />
+        <my-input 
+        v-model="recipe.title" 
+        class="input" 
+        :disableScale="true"
+        placeholder="Название рецепта"
+        />
       </div>
   
       <!-- Загрузка изображения -->
@@ -477,7 +482,7 @@ const OnUnitsSelectFocus = async () => {
 
   const handleClickOutsideTag = (event) => {
     const clickedInsideInput = tagInput.value?.$el?.contains(event.target);
-  const clickedInsideSearch = searchResults.value?.contains(event.target);
+    const clickedInsideSearch = searchResults.value?.contains(event.target);
 
   if (!clickedInsideInput && !clickedInsideSearch) {
     showTagsSearchResults.value = false;
@@ -614,6 +619,8 @@ const saveRecipe = () => {
     width: 80%;
     height: 60%;
     background-color: #fff;
+    background-image: none;
+    padding-left: 20px;
   }
   
   .input:focus {

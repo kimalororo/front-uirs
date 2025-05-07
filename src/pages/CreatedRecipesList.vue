@@ -88,7 +88,7 @@ const selectedSort = ref('')
 const sortOptions  = [
   { value: 'true',  name: 'Опубликованные' },
   { value: 'false', name: 'Черновики' },
-  {valie: 'none', name: 'Убрать фильтры'}
+  { name: 'Убрать фильтры'}
 ]
 const page  = 1
 const limit = 20
