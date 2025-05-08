@@ -156,7 +156,7 @@ const api = axios.create({
 // Состояние рецептов
 const recipes    = ref([])
 const page       = ref(1)
-const limit      = ref(5)
+const limit      = ref(6)
 const totalPages = ref(1)
 const loading    = ref(false)
 
