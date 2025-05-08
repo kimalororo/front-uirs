@@ -92,7 +92,7 @@
           class="ingredient-item"
         >
           <span class="name">{{ item.ingredient.name }}</span>
-          <img class="image_clr" :src="getPhotoUrl(item.ingredient.icons_url)" alt="ingridIcon">
+          <img class="image_clr" :src="getPhotoUrl(item.icon_url)" height="32px" width="32px" alt="ingridIcon">
           <span class="dots"></span>
           <span class="quantity">
             {{ item.adjustedQuantity }} {{ item.unit.name }}
@@ -134,19 +134,19 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
+import defaultIcon from '@/components/icons/defaultIngredient.png'
 
 const route = useRoute()
 const id = route.params.id
 const recipe = ref(null)
 const servings = ref(3)
 const API_HOST = 'https://mandrikov-ad.ru:8443'
-
 const api = axios.create({
   baseURL: `${API_HOST}/api/v1/recipe`
 })
 
 function getPhotoUrl(path) {
-  if (!path) return '/fallback.png'
+  if (!path) return defaultIcon
   if (path.startsWith('http')) return path
   const normalizedPath = path.startsWith('/') ? path : '/' + path
   return `${API_HOST}${normalizedPath}`
@@ -207,7 +207,7 @@ const decreaseServings = () => {
 
 const adjustedIngredients = computed(() => {
   if (!recipe.value) return []
-  const factor = servings.value / 3
+  const factor = servings.value / 3 //Это чё??
   return recipe.value.ingredients.map(item => ({
     ...item,
     adjustedQuantity: (item.quantity * factor).toFixed(1)
