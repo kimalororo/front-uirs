@@ -126,7 +126,11 @@
         </div>
       </div>
     </section>
+    <section id="commentsBlock">
+      <RecipeComments :recipeId="recipe.id" />
+    </section>
   </div>
+  
   <div v-else class="loading">Загрузка рецепта...</div>
 </template>
 
@@ -135,6 +139,7 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 import defaultIcon from '@/components/icons/defaultIngredient.png'
+import RecipeComments from '@/components/menu/RecipeComments.vue'
 
 const route = useRoute()
 const id = route.params.id
