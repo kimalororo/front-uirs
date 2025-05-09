@@ -8,6 +8,31 @@
       <!-- Правая часть: заголовок, контролы, календарь, период -->
       <div class="planner">
         <h1>Персональный планировщик питания</h1> 
+        <my-button 
+        class="planner-create" 
+        variant="filled" 
+        color="nvb"
+        @click="openName"
+        >
+          Добавить план
+        </my-button>
+        <div v-if="showName" class="planner-name">
+          <my-input
+          class="planName"
+          placeholder="Введите название плана" 
+          :disableScale="true"
+          v-model="newPlanName"
+          />
+          <p class="closeName" @click="closeName">✖</p>
+          <my-button 
+          class="planner-create" 
+          variant="filled" 
+          color="nvb"
+          @click="createPlan"
+          >
+           Создать план
+          </my-button>
+        </div>
         <div class="planner-body"> 
             <div class="left">
             <!-- Выбор месяца и кнопка -->
@@ -93,17 +118,23 @@
               <button
                 v-if="hoveredCell.row === row && hoveredCell.key === keyOf(day)"
                 class="add-btn"
-                @click="addMeal(row, day)"
+                @click="openFindRecipe"
             >+</button>
             </template>
           </div>
         </div>
       </div>
+      <FindRecipe
+        v-if="showFindRecipeModal"
+        @close="closeFindRecipe"
+      />
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import plateImg from '../components/icons/sausage.png'
+import FindRecipe from '@/components/UI/FindRecipe.vue'
+import axios from 'axios'
 
 const plateImage = plateImg
 const weekdays = ['Пн.', 'Вт.', 'Ср.', 'Чт.', 'Пт.', 'Сб.', 'Вс.']
@@ -112,7 +143,50 @@ const selectedMonth = ref('')
 const calendar = ref([])
 const startDate = ref(null)
 const endDate = ref(null)
+const newPlanName = ref('')
+const newPlan = ref([])
+//состояния модалки
+const showFindRecipeModal = ref(false)
+function openFindRecipe() {
+  showFindRecipeModal.value = true
+}
+function closeFindRecipe() {
+  showFindRecipeModal.value = false
+}
 
+//состояния добавления плана
+const showName = ref(false)
+function openName(){
+  showName.value = true
+}
+function closeName(){
+  showName.value = false
+}
+
+  const token = localStorage.getItem('token')
+  const api = axios.create({
+    baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
+    headers: {Authorization: token}
+  });
+
+  const createPlan = async () => {
+  try{
+    const response = await api.post('', {
+      name: newPlanName.value
+    });
+    if(response && response.data){
+       newPlan.value = {
+         id: response.data.id,
+         name: response.data.name
+      }
+      console.log(newPlan)
+    }
+  }
+  catch(err){
+    console.log("Ошибка создания плана", err)
+  }
+}
+  
 // структура для блюд: meals[row][ 'dd.MM' ] = { image, title }
 const meals = reactive({ 1: {}, 2: {}, 3: {}, 4: {} })
 const hoveredCell = reactive({row: null, key: null})
@@ -181,6 +255,7 @@ function generateCalendar() {
   const startWeekday = (firstDay.getDay() + 6) % 7
   const daysInMonth = new Date(year, month, 0).getDate()
   const prevMonthDays = new Date(year, month-1, 0).getDate()
+
 
   const grid = []
   let week = []
@@ -285,7 +360,32 @@ onMounted(() => {
     flex-direction: column; /* теперь колонки: сначала заголовок, потом body */
     gap: 20px;              /* расстояние между заголовком и body */
 }
-
+.planner-create{
+  cursor: pointer;
+  justify-content: center;
+  font-size: 16px;
+  width: 20%;
+}
+.planner-name{
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+.planName{
+  background-image: none;
+  border-radius: 10px;
+  padding-left: 18px;
+  height: 40px;
+  width: 50%;
+  font-size: 1rem;
+  margin-top: 0;
+  margin-right: 10px;
+}
+.closeName{
+  cursor: pointer;
+  color:red;
+  margin-right: 14px;
+}
 .planner-body {
   display: flex;
   gap: 40px; 
@@ -393,9 +493,7 @@ onMounted(() => {
   gap: 10px;
   margin-bottom: 10px;
 }
-.corner-cell {
-  /* левая пустая */
-}
+
 .day-cell {
   background: #c2c6ac2b;
   border-radius: 10px;
