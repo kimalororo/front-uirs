@@ -121,19 +121,19 @@
   
       <!-- Параметры -->
       <div class="extra-fields">
-        <div>
+        <div class="allow-shadow">
           <h2>Количество порций:</h2>
           <my-input 
-          class="shadow"
+          class="shadow allow-shadow"
           v-model="recipe.portions" 
           :disableScale="true"
           placeholder="Кол-во "
           type="number" />
         </div>
-        <div>
+        <div class="allow-shadow">
           <h2>Калорийность (ккал):</h2>
           <my-input 
-          class="shadow"
+          class="shadow allow-shadow"
           v-model="recipe.calories" 
           :disableScale="true"
           placeholder="Ккал"
@@ -141,9 +141,9 @@
         </div>
 
         <!--Сложность-->
-        <div>
+        <div class="allow-shadow">
           <h2>Сложность:</h2>
-          <select  class="select shadow" v-model="recipe.difficulty">
+          <select  class="select shadow allow-shadow" v-model="recipe.difficulty">
             <option value="EASY">Легкий</option>
             <option value="MEDIUM">Средний</option>
             <option value="HARD">Сложный</option>
@@ -657,6 +657,11 @@ const saveRecipe = () => {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 15px;
     margin-bottom: 20px;
+    overflow: visible;
+  }
+
+  .allow-shadow{
+    overflow: visible;
   }
   
   .extra-fields input{

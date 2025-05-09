@@ -68,7 +68,7 @@
           </li>
         </ul>
         <div class="card_footer">
-          <p class="card__link">Ник создателя</p>
+          <p class="card__link">{{recipe.author.login}}</p>
           <p class="date">
             Дата создания: {{ normalizeDate(recipe.published_at) }}
           </p>
@@ -91,8 +91,8 @@
           :key="item.id"
           class="ingredient-item"
         >
+          <img class="image_clr" :src="getPhotoUrl(item.ingredient.icon_url)" height="32px" width="32px" alt="ingridIcon">
           <span class="name">{{ item.ingredient.name }}</span>
-          <img class="image_clr" :src="getPhotoUrl(item.icon_url)" height="32px" width="32px" alt="ingridIcon">
           <span class="dots"></span>
           <span class="quantity">
             {{ item.adjustedQuantity }} {{ item.unit.name }}
@@ -367,6 +367,9 @@ const adjustedIngredients = computed(() => {
   flex-shrink: 0;
   font-size: 1.2rem;
   color: black;
+}
+.image_clr{
+  margin-right: 8px;  
 }
 .ingredient-item .quantity {
   color: #333333b1;

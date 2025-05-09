@@ -164,6 +164,9 @@ onMounted(fetchRecipes)
   margin-bottom: 24px;
   overflow: visible;
 }
+.controls button {
+    margin-bottom: 0;
+}
 .flex {
   display: flex;
   padding-bottom: 10px;
@@ -180,7 +183,10 @@ onMounted(fetchRecipes)
 }
 .select {
   min-width: 180px;
+  height: 50px;
+  border-radius: 10px;
 }
+
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

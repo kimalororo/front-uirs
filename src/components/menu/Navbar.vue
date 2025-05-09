@@ -16,7 +16,7 @@
         <MyButton
           variant="filled"
           color="nvb"
-          @click="$router.push('/user')"
+          @click="$router.push('/userInfo')"
           class="height"
         >
           <template #icon>

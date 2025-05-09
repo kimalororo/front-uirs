@@ -137,13 +137,14 @@ const selectedItems = computed({
   height: 40px;
   padding-left: 10px;
   padding-right: 2em; 
-  border-radius: 10px 10px 0 0;
+  border-radius: 10px;
   border: solid light-dark(rgb(118, 118, 118), rgb(133, 133, 133)) 1px;
   font-size: 1rem;   
   text-align: center;
 }
 .search-input :focus{
-  border: solid black 0.2px 
+  border: solid black 0.2px;
+  border-radius: 10px 10px 0 0;
 }
 .clear-btn {
   position: absolute;

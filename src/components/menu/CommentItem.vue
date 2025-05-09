@@ -8,7 +8,7 @@
             <span v-for="star in comment.rating" :key="star" class="star">⭐</span>
           </span>
         </template>
-        <strong v-else>Удалённый пользователь</strong>
+        <strong v-else></strong>
       </div>
 
       <div class="right" v-if="isAuthor(comment)">

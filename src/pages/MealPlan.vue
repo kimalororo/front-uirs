@@ -412,6 +412,8 @@ onMounted(() => {
 
 .row-label {
   background: #c2c6ac2b;
+  justify-content: center;
+  align-items: center;
   border-radius: 10px;
   font-weight: bold;
   height: 80px;
