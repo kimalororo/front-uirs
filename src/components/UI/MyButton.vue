@@ -86,13 +86,13 @@ export default {
 
 /** Для навбарчика **/
 .btn--nvb.btn--filled {
-  background-color: #e7f4e8;
+  background-color: #54bb7152;
   border-color: black;
-  color: #4F4B4B;
+  color: #333;
 }
 .btn--nvb.btn--filled:hover {
   background-color: #b3c5b4ef;
-  border-color: white;
+  border-color: black;
 }
 .btn--nvb.btn--outline {
   color: black;
