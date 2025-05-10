@@ -118,7 +118,7 @@
               <button
                 v-if="hoveredCell.row === row && hoveredCell.key === keyOf(day)"
                 class="add-btn"
-                @click="openFindRecipe"
+                @click="openFindRecipe(selectedPlanId, keyOf(day), row)"
             >+</button>
             </template>
           </div>
@@ -126,6 +126,9 @@
       </div>
       <FindRecipe
         v-if="showFindRecipeModal"
+        :planId="modalContext.planId"
+        :date-key="modalContext.dateKey"
+        :order="modalContext.order"
         @close="closeFindRecipe"
       />
 </template>
@@ -145,13 +148,33 @@ const startDate = ref(null)
 const endDate = ref(null)
 const newPlanName = ref('')
 const newPlan = ref([])
+
 //состояния модалки
+const plans = ref([])
+const selectedPlanId = ref(null)
 const showFindRecipeModal = ref(false)
-function openFindRecipe() {
+
+const modalContext = reactive({
+  planId: null, 
+  dateKey: '', 
+  order: null
+})
+
+function openFindRecipe(planId, dayKey, order) {
+  modalContext.planId = planId
+  modalContext.dateKey = convertDmyToYmd(dayKey)
+  modalContext.order = order
   showFindRecipeModal.value = true
 }
 function closeFindRecipe() {
   showFindRecipeModal.value = false
+}
+
+function convertDmyToYmd(dmy) {
+  const [day, month, year] = dmy.split('.')
+  const dd = day.padStart(2, '0')
+  const mm = month.padStart(2, '0')
+  return `2025-${mm}-${dd}`
 }
 
 //состояния добавления плана
@@ -187,6 +210,19 @@ function closeName(){
   }
 }
   
+const getPlans = async () => {
+  try{
+    const response = await api.get('')
+    plans.value = response.data
+    if(plans.value.length){      
+      selectedPlanId.value = plans.value[0].id
+      console.log(selectedPlanId)
+    }
+  }
+  catch(err){
+    console.log("Ошибка при получении планов")
+  }
+}
 // структура для блюд: meals[row][ 'dd.MM' ] = { image, title }
 const meals = reactive({ 1: {}, 2: {}, 3: {}, 4: {} })
 const hoveredCell = reactive({row: null, key: null})
@@ -340,6 +376,7 @@ onMounted(() => {
   const now = new Date()
   selectedMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
   generateCalendar()
+  getPlans()
 })
 </script>
 

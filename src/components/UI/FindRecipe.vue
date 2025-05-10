@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" @click.self="emitClose">
-    <div class="modal-window">
-        <h1 class="page-title">Добавить рецепт</h1>
+    <div class="modal-window" ref="modalWindow">
+        <h1 class="page-title">Добавить рецепт на день {{ dateKey }}</h1>
         <!-- Панель фильтров -->
         <div class="controls">
         <MyInput
@@ -45,7 +45,6 @@
             v-for="r in recipes"
             :key="r.id"
             class="card"
-            @click="$router.push(`/watch/${r.id}`)"
         >
             <div class="card-image-wrapper">
             <img
@@ -96,6 +95,11 @@
                 <span>{{ r.calories }} ККал</span>
                 </div>
             </div>
+            <my-button 
+            class="add" variant="filled" color="nvb"
+            @click="addRecipe(r.id)">
+              Добавить
+            </my-button>
             </div>
         </div>
     </div>
@@ -121,6 +125,21 @@ import MySelect from './MySelect.vue'
 import MyMultiSelect from './MyMultiSelect.vue'
 import MyInput from './MyInput.vue'
 
+const props = defineProps({
+  planId:{
+    type: Number,
+    default: null
+  },
+  dateKey: {
+    type: String,
+    default: ''
+  },
+  order: {
+    type: Number,
+    default: null
+  }
+})
+
 // опишем событие закрытия
 const emit = defineEmits(['close'])
 
@@ -137,6 +156,27 @@ const api = axios.create({
   paramsSerializer: params =>
     qs.stringify(params, { arrayFormat: 'repeat' })
 })
+
+const apiMeal = axios.create({
+  baseURL: `${API_HOST}/api/v1/mealplan`,
+  headers: {Authorization:token}
+})
+
+// Добавление рецепта в милплан 
+const addRecipe = async (recipeId) => {
+  try{
+    const url = `/${props.planId}/days/${props.dateKey}/recipes`;
+    const response = await apiMeal.post(url, {
+      recipe_id: recipeId,
+      order: props.order
+    })
+    console.log("success")
+    emitClose();
+  }
+  catch(err){
+    console.log("Ошибка при добавлении рецепта в план", err)
+  }
+}
 
 // Состояние рецептов
 const recipes    = ref([])
@@ -409,7 +449,7 @@ watch(ingridQuery, q => { ingridPage.value = 1; fetchIngrids(q, 1) })
 }
 .card-img {
   width: 100%;
-  height: 140px;
+  height: 200px;
   object-fit: cover;
   transition: transform .4s;
 }
@@ -458,8 +498,15 @@ watch(ingridQuery, q => { ingridPage.value = 1; fetchIngrids(q, 1) })
   margin-bottom: 2px;
   margin-right: 2px;
 }
-
-
+.add {
+margin-top: 10px;
+border-radius: 7px;
+height: 20px;
+width: 40%;
+font-size: 0.8rem;
+border-color: none;
+border: 1px rgba(11, 139, 11, 0.288) solid;
+}
 /* Плейсхолдер бесконечной прокрутки */
 .loading-indicator,
 .no-results {
