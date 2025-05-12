@@ -88,12 +88,12 @@
     </div>
     </div>
       <!-- Сетка блюд -->
-      <div class="meals-grid" v-if="selectedDays.length">
+      <div class="meals-grid" v-if="displayDays.length">
         <!-- Шапка: даты -->
         <div class="header-row">
           <div class="corner-cell"></div>
           <div
-            v-for="day in selectedDays"
+            v-for="day in displayDays"
             :key="keyOf(day)"
             class="day-cell"
           >
@@ -111,7 +111,7 @@
             Блюдо <br /> № {{ row }}
           </div>
           <div
-            v-for="day in selectedDays"
+            v-for="day in displayDays"
             :key="keyOf(day)"
             class="meal-cell"
             @mouseenter="() => { hoveredCell.row = row; hoveredCell.key = keyOf(day) }"
@@ -149,11 +149,15 @@
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
 import plateImg from '@/components/icons/sausage.png'
 import FindRecipe from '@/components/UI/FindRecipe.vue'
 import axios from 'axios'
 import MyButton from '@/components/UI/MyButton.vue'
 import MyInput from '@/components/UI/MyInput.vue'
+
+// Инициализация тоста
+const toast = useToast()
 
 const plateImage = plateImg
 const weekdays = ['Пн.', 'Вт.', 'Ср.', 'Чт.', 'Пт.', 'Сб.', 'Вс.']
@@ -164,6 +168,8 @@ const selectedMonth = ref('')
 const calendar = ref([])
 const startDate = ref(null)
 const endDate = ref(null)
+const confirmedStart = ref(null)
+const confirmedEnd   = ref(null)
 
 // Планы и блюда
 const plans = ref([])
@@ -190,6 +196,31 @@ const periodText = computed(() => {
 })
 
 // Массив выбранных дней
+async function initializeWeekAndPlans() {
+  // 1) Вычисляем текущую неделю
+  const today = new Date()
+  const offset = (today.getDay() + 6) % 7
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset, 0, 0, 0, 0)
+  const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6, 0, 0, 0, 0)
+
+  startDate.value = monday
+  endDate.value   = sunday
+  confirmedStart.value = monday
+  confirmedEnd.value   = sunday
+  updateSelection()
+
+  // 2) Загружаем планы с сервера
+  try {
+    const { data } = await api.get('')
+    plans.value = data
+    if (plans.value.length) {
+      selectedPlanId.value = plans.value[0].id
+      loadMealsForPlan(plans.value[0])
+    }
+  } catch (e) {
+    console.error('Ошибка при получении планов', e)
+  }
+}
 const selectedDays = computed(() => {
   if (!startDate.value || !endDate.value) return []
   const arr = []
@@ -201,6 +232,16 @@ const selectedDays = computed(() => {
   return arr
 })
 
+const displayDays = computed(() => {
+  if (!confirmedStart.value || !confirmedEnd.value) return []
+  const arr = []
+  let d = new Date(confirmedStart.value)
+  while (d <= confirmedEnd.value) {
+    arr.push(new Date(d))
+    d.setDate(d.getDate() + 1)
+  }
+  return arr
+})
 // Хелперы
 function formatDate(d) {
   const dd = String(d.getDate()).padStart(2,'0')
@@ -227,9 +268,9 @@ function openName() { showName.value = true }
 function closeName() { showName.value = false }
 
 const api = axios.create({
-      baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
-      headers: { Authorization: localStorage.getItem('token') }
-    })
+  baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
+  headers: { Authorization: localStorage.getItem('token') }
+})
 
 // Создать новый план
 async function createPlan() {
@@ -244,27 +285,13 @@ async function createPlan() {
   }
 }
 
-// Загрузить все планы и первый по умолчанию
+// Загрузить все планы и установить текущую неделю по умолчанию
 onMounted(async () => {
   initMonths()
   const now = new Date()
   selectedMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
   generateCalendar()
-
-  try {
-    const api = axios.create({
-      baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
-      headers: { Authorization: localStorage.getItem('token') }
-    })
-    const { data } = await api.get('')
-    plans.value = data
-    if (plans.value.length) {
-      selectedPlanId.value = plans.value[0].id
-      loadMealsForPlan(plans.value[0])
-    }
-  } catch (e) {
-    console.error('Ошибка при получении планов', e)
-  }
+  initializeWeekAndPlans()
 })
 
 // При смене плана — обновить блюда
@@ -343,20 +370,32 @@ function generateCalendar() {
 function selectDate(day) {
   if (!day.isCurrentMonth) return
   const dt = day.date
+
   if (!startDate.value || (startDate.value && endDate.value)) {
-    startDate.value = dt; endDate.value = null
+    // начинаем новый выбор
+    startDate.value = dt
+    endDate.value   = null
   }
   else if (!endDate.value) {
-    if (dt >= startDate.value) {
-      const diff = Math.floor((dt - startDate.value)/(1000*60*60*24))
-      if (diff < 7) endDate.value = dt
-      else return alert('Максимальный период — 7 дней')
-    } else {
+    const diff = Math.floor((dt - startDate.value) / (1000*60*60*24))
+    if (dt >= startDate.value && diff < 7) {
+      endDate.value = dt
+      // вот тут мы «подтверждаем» новый интервал:
+      confirmedStart.value = startDate.value
+      confirmedEnd.value   = endDate.value
+    }
+    else if (diff >= 7) {
+      toast.error('Максимальный период — 7 дней')
+      return
+    }
+    else {
       startDate.value = dt
     }
   }
+
   updateSelection()
 }
+
 
 function updateSelection() {
   calendar.value.forEach(week =>
@@ -380,7 +419,7 @@ function openFindRecipe(planId, dayKey, order) {
 }
 async function closeFindRecipe() {
   showFindRecipeModal.value = false;
-   const { data: freshPlan } = await api.get(`/${selectedPlanId.value}`);
+  const { data: freshPlan } = await api.get(`/${selectedPlanId.value}`);
   const idx = plans.value.findIndex(p => p.id === freshPlan.id);
   if (idx !== -1) plans.value[idx] = freshPlan;
   loadMealsForPlan(freshPlan);
@@ -389,7 +428,6 @@ async function closeFindRecipe() {
 // Конвертация «dd.MM» → «YYYY-MM-DD»
 function convertDmyToYmd(dmy) {
   const [dd, mm] = dmy.split('.')
-  // год нужно брать из selectedMonth
   const year = selectedMonth.value.split('-')[0]
   return `${year}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`
 }
