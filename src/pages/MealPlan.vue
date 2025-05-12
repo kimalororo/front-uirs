@@ -1,65 +1,71 @@
 <template>
   <div class="meal-planner">
-      <!-- Левая картинка -->
-      <div class="image-container">
-        <img :src="plateImage" alt="Планировщик питания" />
-      </div>
+    <!-- Левая картинка -->
+    <div class="image-container">
+      <img :src="plateImage" alt="Планировщик питания" />
+    </div>
 
-      <!-- Правая часть: заголовок, контролы, календарь, период -->
-      <div class="planner">
-        <h1>Персональный планировщик питания</h1> 
-        <my-button 
+    <!-- Правая часть: заголовок, контролы, календарь, период -->
+    <div class="planner">
+      <h1>Персональный планировщик питания</h1> 
+      <my-button 
         class="planner-create" 
         variant="filled" 
         color="nvb"
         @click="openName"
-        >
-          Добавить план
-        </my-button>
-        <div v-if="showName" class="planner-name">
-          <my-input
+      >
+        Добавить план
+      </my-button>
+      <div v-if="showName" class="planner-name">
+        <my-input
           class="planName"
           placeholder="Введите название плана" 
           :disableScale="true"
           v-model="newPlanName"
-          />
-          <p class="closeName" @click="closeName">✖</p>
-          <my-button 
+        />
+        <p class="closeName" @click="closeName">✖</p>
+        <my-button 
           class="planner-create" 
           variant="filled" 
           color="nvb"
           @click="createPlan"
-          >
-           Создать план
-          </my-button>
-        </div>
-        <div class="planner-body"> 
-            <div class="left">
-            <!-- Выбор месяца и кнопка -->
-            <div class="controls">
+        >
+          Создать план
+        </my-button>
+      </div>
+
+      <div class="planner-body">
+        <div class="left">
+          <!-- Выбор месяца и кнопка -->
+          <div class="controls">
             <label>
-                Месяц
-                <select class="shadow" v-model="selectedMonth">
+              Месяц
+              <select v-model="selectedMonth">
                 <option
-                    v-for="m in months"
-                    :key="m.value"
-                    :value="m.value"
+                  v-for="m in months"
+                  :key="m.value"
+                  :value="m.value"
                 >{{ m.label }}</option>
-                </select>
+              </select>
             </label>
-            <my-button variant="filled" color="nvb" @click="generateCalendar">Показать</my-button>
-            </div>
-            
-            <!-- Поле выбранного периода -->
-            <div class="selected-period">
+            <my-button variant="filled" color="nvb" @click="generateCalendar">
+              Показать
+            </my-button>
+          </div>
+
+          <!-- Поле выбранного периода -->
+          <div class="selected-period">
             <label>Выбранный период</label>
             <input type="text" class="shadow" :value="periodText" readonly />
-            </div>
+          </div>
         </div>
+
         <!-- Календарь -->
         <div class="calendar shadow">
           <div class="weekdays">
-            <div v-for="day in weekdays" :key="day" class="weekday">{{ day }}</div>
+            <div v-for="day in weekdays" :key="day" class="weekday">
+              {{ day }}
+            </div>
           </div>
           <div class="weeks">
             <div v-for="(week, wIdx) in calendar" :key="wIdx" class="week">
@@ -67,15 +73,20 @@
                 v-for="day in week"
                 :key="day.date.toISOString()"
                 class="day"
-                :class="{ 'other-month': !day.isCurrentMonth, 'selected': day.isSelected }"
+                :class="{ 
+                  'other-month': !day.isCurrentMonth,
+                  'selected': day.isSelected 
+                }"
                 @click="selectDate(day)"
-              >{{ day.date.getDate() }}</div>
+              >
+                {{ day.date.getDate() }}
+              </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
-</div>
-</div>
+    </div>
       <!-- Сетка блюд -->
       <div class="meals-grid" v-if="selectedDays.length">
         <!-- Шапка: даты -->
@@ -96,7 +107,9 @@
           :key="row"
           class="meal-row"
         >
-          <div class="row-label">Блюдо <br> № {{ row }}</div>
+          <div class="row-label">
+            Блюдо <br /> № {{ row }}
+          </div>
           <div
             v-for="day in selectedDays"
             :key="keyOf(day)"
@@ -118,12 +131,13 @@
               <button
                 v-if="hoveredCell.row === row && hoveredCell.key === keyOf(day)"
                 class="add-btn"
-                @click="openFindRecipe(selectedPlanId, keyOf(day), row)"
-            >+</button>
+                @click.stop="openFindRecipe(selectedPlanId, keyOf(day), row)"
+              >+</button>
             </template>
           </div>
         </div>
       </div>
+
       <FindRecipe
         v-if="showFindRecipeModal"
         :planId="modalContext.planId"
@@ -134,100 +148,38 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import plateImg from '../components/icons/sausage.png'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import plateImg from '@/components/icons/sausage.png'
 import FindRecipe from '@/components/UI/FindRecipe.vue'
 import axios from 'axios'
+import MyButton from '@/components/UI/MyButton.vue'
+import MyInput from '@/components/UI/MyInput.vue'
 
 const plateImage = plateImg
 const weekdays = ['Пн.', 'Вт.', 'Ср.', 'Чт.', 'Пт.', 'Сб.', 'Вс.']
+
+// Планирование месяца
 const months = ref([])
 const selectedMonth = ref('')
 const calendar = ref([])
 const startDate = ref(null)
 const endDate = ref(null)
-const newPlanName = ref('')
-const newPlan = ref([])
 
-//состояния модалки
+// Планы и блюда
 const plans = ref([])
 const selectedPlanId = ref(null)
-const showFindRecipeModal = ref(false)
+const meals = reactive({ 1:{}, 2:{}, 3:{}, 4:{} })
+const hoveredCell = reactive({ row: null, key: null })
 
-const modalContext = reactive({
-  planId: null, 
-  dateKey: '', 
-  order: null
-})
-
-function openFindRecipe(planId, dayKey, order) {
-  modalContext.planId = planId
-  modalContext.dateKey = convertDmyToYmd(dayKey)
-  modalContext.order = order
-  showFindRecipeModal.value = true
-}
-function closeFindRecipe() {
-  showFindRecipeModal.value = false
-}
-
-function convertDmyToYmd(dmy) {
-  const [day, month, year] = dmy.split('.')
-  const dd = day.padStart(2, '0')
-  const mm = month.padStart(2, '0')
-  return `2025-${mm}-${dd}`
-}
-
-//состояния добавления плана
+// Создание нового плана
 const showName = ref(false)
-function openName(){
-  showName.value = true
-}
-function closeName(){
-  showName.value = false
-}
+const newPlanName = ref('')
 
-  const token = localStorage.getItem('token')
-  const api = axios.create({
-    baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
-    headers: {Authorization: token}
-  });
+// Модалка поиска рецепта
+const showFindRecipeModal = ref(false)
+const modalContext = reactive({ planId: null, dateKey: '', order: null })
 
-  const createPlan = async () => {
-  try{
-    const response = await api.post('', {
-      name: newPlanName.value
-    });
-    if(response && response.data){
-       newPlan.value = {
-         id: response.data.id,
-         name: response.data.name
-      }
-      console.log(newPlan)
-    }
-  }
-  catch(err){
-    console.log("Ошибка создания плана", err)
-  }
-}
-  
-const getPlans = async () => {
-  try{
-    const response = await api.get('')
-    plans.value = response.data
-    if(plans.value.length){      
-      selectedPlanId.value = plans.value[0].id
-      console.log(selectedPlanId)
-    }
-  }
-  catch(err){
-    console.log("Ошибка при получении планов")
-  }
-}
-// структура для блюд: meals[row][ 'dd.MM' ] = { image, title }
-const meals = reactive({ 1: {}, 2: {}, 3: {}, 4: {} })
-const hoveredCell = reactive({row: null, key: null})
-
-// отформатированный текст выбранного периода
+// Отображение периода
 const periodText = computed(() => {
   if (startDate.value && endDate.value) {
     return `${formatDate(startDate.value)} – ${formatDate(endDate.value)}`
@@ -237,356 +189,359 @@ const periodText = computed(() => {
   return ''
 })
 
-// массив дат от startDate до endDate
+// Массив выбранных дней
 const selectedDays = computed(() => {
   if (!startDate.value || !endDate.value) return []
-  const days = []
+  const arr = []
   let d = new Date(startDate.value)
   while (d <= endDate.value) {
-    days.push(new Date(d))
+    arr.push(new Date(d))
     d.setDate(d.getDate() + 1)
   }
-  return days
+  return arr
 })
 
-// ключ для словаря вида "dd.MM"
+// Хелперы
+function formatDate(d) {
+  const dd = String(d.getDate()).padStart(2,'0')
+  const mm = String(d.getMonth()+1).padStart(2,'0')
+  return `${dd}.${mm}`
+}
 function keyOf(d) {
   const dd = String(d.getDate()).padStart(2,'0')
   const mm = String(d.getMonth()+1).padStart(2,'0')
   return `${dd}.${mm}`
 }
+function keyOfDateString(ymd) {
+  const [year, month, day] = ymd.split('-')
+  return `${day}.${month}`
+}
+function fullImageUrl(path) {
+  return path.startsWith('http')
+    ? path
+    : `https://mandrikov-ad.ru:8443${path}`
+}
 
-// заглушка: по клику на "+" добавляем пример блюда
-function addMeal(row, date) {
-  const k = keyOf(date)
-  meals[row][k] = {
-    image: 'https://via.placeholder.com/80',
-    title: 'Пример блюда'
+// Открыть/закрыть модалку создания плана
+function openName() { showName.value = true }
+function closeName() { showName.value = false }
+
+const api = axios.create({
+      baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
+      headers: { Authorization: localStorage.getItem('token') }
+    })
+
+// Создать новый план
+async function createPlan() {
+  try {
+    const { data } = await api.post('', { name: newPlanName.value })
+    plans.value.push(data)
+    selectedPlanId.value = data.id
+    loadMealsForPlan(data)
+    closeName()
+  } catch (e) {
+    console.error('Ошибка создания плана', e)
   }
 }
 
-// инициализация списка месяцев (±6 от текущего)
+// Загрузить все планы и первый по умолчанию
+onMounted(async () => {
+  initMonths()
+  const now = new Date()
+  selectedMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+  generateCalendar()
+
+  try {
+    const api = axios.create({
+      baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
+      headers: { Authorization: localStorage.getItem('token') }
+    })
+    const { data } = await api.get('')
+    plans.value = data
+    if (plans.value.length) {
+      selectedPlanId.value = plans.value[0].id
+      loadMealsForPlan(plans.value[0])
+    }
+  } catch (e) {
+    console.error('Ошибка при получении планов', e)
+  }
+})
+
+// При смене плана — обновить блюда
+watch(selectedPlanId, id => {
+  const plan = plans.value.find(p => p.id === id)
+  if (plan) loadMealsForPlan(plan)
+})
+
+// Заполнить meals из объекта план→дни→рецепты
+function loadMealsForPlan(plan) {
+  Object.keys(meals).forEach(r => meals[r] = {})
+  plan.days.forEach(day => {
+    const key = keyOfDateString(day.date)
+    day.recipes.forEach(rec => {
+      const row = rec.order
+      if (meals[row]) {
+        meals[row][key] = {
+          image: fullImageUrl(rec.preview),
+          title: rec.recipe_title
+        }
+      }
+    })
+  })
+}
+
+// Календарь
 function initMonths() {
   const now = new Date()
   const list = []
   for (let i = -6; i <= 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth()+i, 1)
-    const year = d.getFullYear()
-    const month = d.getMonth()+1
-    const value = `${year}-${String(month).padStart(2,'0')}`
-    let label = d.toLocaleString('ru-RU',{ month:'long', year:'numeric' })
-    label = label.charAt(0).toUpperCase() + label.slice(1)
+    const value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+    const label = d.toLocaleString('ru-RU',{ month:'long', year:'numeric' })
+                 .replace(/^./, s => s.toUpperCase())
     list.push({ value, label })
   }
   months.value = list
 }
 
-// построение сетки календаря
 function generateCalendar() {
   startDate.value = null
   endDate.value = null
 
   const [year, month] = selectedMonth.value.split('-').map(Number)
-  const firstDay = new Date(year, month-1, 1)
-  const startWeekday = (firstDay.getDay() + 6) % 7
+  const first = new Date(year, month-1, 1)
+  const startWeekday = (first.getDay()+6)%7
   const daysInMonth = new Date(year, month, 0).getDate()
-  const prevMonthDays = new Date(year, month-1, 0).getDate()
-
+  const prevDays = new Date(year, month-1, 0).getDate()
 
   const grid = []
   let week = []
 
-  // дни предыдущего месяца
-  for (let i = 0; i < startWeekday; i++) {
-    const d = new Date(year, month-1, i - startWeekday + 1 + prevMonthDays)
+  // предыдущие
+  for (let i=0; i<startWeekday; i++) {
+    const d = new Date(year, month-1, i - startWeekday + 1 + prevDays)
     week.push({ date: d, isCurrentMonth: false, isSelected: false })
   }
-  // дни текущего
-  for (let d = 1; d <= daysInMonth; d++) {
+  // текущие
+  for (let d=1; d<=daysInMonth; d++) {
     const dt = new Date(year, month-1, d)
     week.push({ date: dt, isCurrentMonth: true, isSelected: false })
     if (week.length === 7) {
-      grid.push(week)
-      week = []
+      grid.push(week); week = []
     }
   }
-  // дни следующего месяца
+  // следующие
   let nd = 1
   while (week.length < 7) {
-    const d = new Date(year, month, nd++)
-    week.push({ date: d, isCurrentMonth: false, isSelected: false })
+    week.push({ date: new Date(year, month, nd++), isCurrentMonth: false, isSelected: false })
   }
   grid.push(week)
 
   calendar.value = grid
 }
 
-// выбор даты и ограничение периода 7 днями
 function selectDate(day) {
   if (!day.isCurrentMonth) return
   const dt = day.date
-
   if (!startDate.value || (startDate.value && endDate.value)) {
-    // начинаем новый выбор
-    startDate.value = dt
-    endDate.value = null
+    startDate.value = dt; endDate.value = null
   }
   else if (!endDate.value) {
     if (dt >= startDate.value) {
-      const msPerDay = 1000*60*60*24
-      const diff = Math.floor((dt - startDate.value) / msPerDay)
-      if (diff < 7) {
-        endDate.value = dt
-      } else {
-        alert('Максимальный период — 7 дней')
-        return
-      }
+      const diff = Math.floor((dt - startDate.value)/(1000*60*60*24))
+      if (diff < 7) endDate.value = dt
+      else return alert('Максимальный период — 7 дней')
     } else {
-      // если кликнули раньше — меняем старт
       startDate.value = dt
     }
   }
-
   updateSelection()
 }
 
-// обновляем флаг isSelected у ячеек
 function updateSelection() {
   calendar.value.forEach(week =>
     week.forEach(day => {
       const t = day.date.getTime()
-      day.isSelected = startDate.value && endDate.value
-        ? t >= startDate.value.getTime() && t <= endDate.value.getTime()
-        : startDate.value
-          ? t === startDate.value.getTime()
-          : false
+      day.isSelected = startDate.value
+        ? endDate.value
+          ? t>=startDate.value.getTime() && t<=endDate.value.getTime()
+          : t===startDate.value.getTime()
+        : false
     })
   )
 }
 
-// формат "dd.MM"
-function formatDate(d) {
-  const dd = String(d.getDate()).padStart(2,'0')
-  const mm = String(d.getMonth()+1).padStart(2,'0')
-  return `${dd}.${mm}`
+// Открыть/закрыть модалку FindRecipe
+function openFindRecipe(planId, dayKey, order) {
+  modalContext.planId = planId
+  modalContext.dateKey = convertDmyToYmd(dayKey)
+  modalContext.order = order
+  showFindRecipeModal.value = true
+}
+async function closeFindRecipe() {
+  showFindRecipeModal.value = false;
+   const { data: freshPlan } = await api.get(`/${selectedPlanId.value}`);
+  const idx = plans.value.findIndex(p => p.id === freshPlan.id);
+  if (idx !== -1) plans.value[idx] = freshPlan;
+  loadMealsForPlan(freshPlan);
 }
 
-onMounted(() => {
-  initMonths()
-  const now = new Date()
-  selectedMonth.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
-  generateCalendar()
-  getPlans()
-})
+// Конвертация «dd.MM» → «YYYY-MM-DD»
+function convertDmyToYmd(dmy) {
+  const [dd, mm] = dmy.split('.')
+  // год нужно брать из selectedMonth
+  const year = selectedMonth.value.split('-')[0]
+  return `${year}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`
+}
 </script>
 
 <style scoped>
-  .meal-planner {
-    display: flex;
-    gap: 40px;
-    padding: 20px;
-  }
-  .image-container img {
-    width: 400px;
-    border-radius: 8px;
-  }
-  
-.planner {
-    flex: 1;
-    display: flex;
-    flex-direction: column; /* теперь колонки: сначала заголовок, потом body */
-    gap: 20px;              /* расстояние между заголовком и body */
-}
-.planner-create{
-  cursor: pointer;
-  justify-content: center;
-  font-size: 16px;
-  width: 20%;
-}
-.planner-name{
-  display: flex;
-  align-items: center;
-  overflow: visible;
-}
-.planName{
-  background-image: none;
-  border-radius: 10px;
-  padding-left: 18px;
-  height: 40px;
-  width: 50%;
-  font-size: 1rem;
-  margin-top: 0;
-  margin-right: 10px;
-}
-.closeName{
-  cursor: pointer;
-  color:red;
-  margin-right: 14px;
-}
-.planner-body {
-  display: flex;
+.meal-planner 
+{ 
+  display: flex; 
   gap: 40px; 
+  padding: 20px;
   overflow: visible;
 }
-  .h1 {
-    font-size: 28px;
-    margin-bottom: 24px;
-  }
-  .left {
-    width: 30%;
-  }
-  .controls {
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    margin-top: 20px;
-    overflow: visible;
-  }
-  .controls select {
-    padding: 6px 10px;
-    font-size: 16px;
-    border-radius: 10px;
-    height: 45px;
-    margin-top: 4px;
-    margin-bottom: 10px;
+.image-container img { width: 400px;  border-radius: 8px; }
+
+.planner { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.planner-create 
+{  
+  font-size: 16px;
+  width: 20%; 
+  margin-left: 1%;
 }
-  .controls button {
-    cursor: pointer;
-    justify-content: center;
-    font-size: 16px;
-    margin-top: 14px;
-    margin-left: 5%;
-    width: 90%;
-  }
-  
+.planner-name { display: flex; align-items: center; }
+.planName 
+{ width: 50%; 
+  height: 40px; 
+  border-radius: 10px; 
+  padding-left: 18px; 
+  background-image: none;
+}
+.closeName { cursor: pointer; color:red; margin: 0 14px; }
+
+.planner-body { display: flex; gap: 40px; }
+.left { width: 30%; overflow: visible;}
+.controls 
+{ 
+  display: flex; 
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; 
+  gap: 5px;
+  overflow: visible;
+}
+.controls select { padding: 6px 10px; font-size: 16px; border-radius: 10px; height: 45px; }
+.controls button { cursor: pointer; font-size: 16px; width: 90%; margin-top: 10px; }
   .calendar {
     border: 1px solid #333;
     border-radius: 10px;
     width: 100%;
     height: 100%;
     }
-  .weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: #f0f0f0;
-  }
-  .weekday {
-    text-align: center;
-    padding: 8px 0;
-    font-weight: bold;
-  }
-  .weeks .week {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-  }
-  .day {
-    text-align: center;
-    padding: 12px 0;
-    cursor: pointer;
-    border: 1px solid #333;
-    font-size: 1.2rem;
-  }
-  .other-month {
-    opacity: 0.3;
-  }
-  .selected {
-    background-color: #48825852;
-  }
-  
-  .selected-period {
-    margin-top: 24px;
-    overflow: visible;
-  }
-  .selected-period input {
-    width: 160px;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #333;
-    border-radius: 10px;
-    margin-top: 4px;
-    width: 100%;
-  }
-  .shadow {
-  box-shadow:
-    0 8px 12px rgba(0, 0, 0, 0.15),
-    0 3px 4px rgba(0, 0, 0, 0.1);
+.weekdays, .weeks .week { display: grid; grid-template-columns: repeat(7,1fr); }
+.weekday { text-align: center; padding: 8px 0; font-weight: bold; background: #f0f0f0; }
+.day { text-align: center; padding: 12px 0; cursor: pointer; border: 1px solid #333; font-size: 1.2rem; }
+.other-month { opacity: 0.3; }
+.selected { 
+  background-color: #48825852; 
+}
+
+.selected-period
+{ 
+  margin-top: 24px; 
+  overflow: visible;
+  justify-content: center;
+  margin-left: 5%; 
+}
+.selected-period input
+ { 
+  width: 90%; 
+  padding: 8px; 
+  font-size: 16px;
+  border: 1px solid #333;
+  border-radius: 10px; 
+}
+
+.shadow {
+  box-shadow: 0 8px 12px rgba(0,0,0,0.15), 0 3px 4px rgba(0,0,0,0.1);
 }
 .shadow:hover {
-  box-shadow:
-    0 10px 14px rgba(0, 0, 0, 0.18),
-    0 5px 6px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 14px rgba(0,0,0,0.18), 0 5px 6px rgba(0,0,0,0.12);
 }
-/* Сетка блюд */
-.meals-grid {
-  margin-top: 30px;
-  overflow-x: auto;
+
+.meals-grid { 
+  margin-top: 30px; 
+  overflow-x: auto; 
 }
-.header-row,
-.meal-row {
+
+.meals-grid .meal-row:nth-of-type(odd) {
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+.meals-grid .meal-row:nth-of-type(even) {
+  background-color: #ffffff7c;
+  border-radius: 10px;
+}
+.meals-grid .meal-row .row-label {
+  background-color: #c2c6ac44;
+}
+
+
+.header-row, .meal-row {
   display: grid;
-  grid-template-columns: 100px repeat(auto-fit, minmax(80px, 1fr));
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  grid-template-columns: 100px repeat(auto-fit,minmax(80px,1fr));
+  gap: 10px; align-items: center; margin-bottom: 10px;
 }
 
 .day-cell {
-  background: #c2c6ac2b;
+  background: #c2c6ac2b; 
+  border: 1px solid rgba(128, 128, 128, 0.267);
   border-radius: 10px;
-  height: 80px;
-  display: flex;
-  align-items: flex-end;
+  height: 80px; 
+  display: flex; 
+  align-items: center; 
   justify-content: center;
-  padding-bottom: 8px;
 }
-.date-text {
-  font-weight: bold;
-  text-decoration: underline;
-}
+.date-text { font-weight: bold; text-decoration: underline; }
 
 .row-label {
   background: #c2c6ac2b;
-  justify-content: center;
-  align-items: center;
   border-radius: 10px;
+  border: 1px solid #8080802e;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  height: 140px;
   font-weight: bold;
-  height: 80px;
-  padding: 0 8px;
 }
-
-.meal-cell {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  justify-self: center;
-}
-.meal-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
+.meal-cell 
+{ 
+  position: relative; 
+  height: 130px; 
+  width: 70%; 
+  max-width: 110px;
+  justify-self: center; }
+.meal-img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
 .meal-title {
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  right: 4px;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  font-size: 12px;
-  text-align: center;
-  border-radius: 2px;
+  position: absolute; bottom: 4px; left: 4px; right: 4px;
+  background: rgba(0,0,0,0.5); color: #fff; font-size: 12px;
+  text-align: center; border-radius: 2px;
 }
 
 .add-btn {
-  width: 100%;
-  height: 100%;
+  margin-top: 20%;
+  margin-left: 15%;
+  width: 100%; 
+  height: 100%; 
+  max-width: 80px;
+  max-height: 80px;
   background: #c2c6ac;
-  border: none;
-  border-radius: 50%;
-  font-size: 28px;
-  line-height: 1;
+  border: none; 
+  border-radius: 50%; 
+  font-size: 28px; 
   cursor: pointer;
 }
 </style>

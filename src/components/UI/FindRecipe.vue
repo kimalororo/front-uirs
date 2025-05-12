@@ -141,8 +141,6 @@ const props = defineProps({
 })
 
 // опишем событие закрытия
-const emit = defineEmits(['close'])
-
 function emitClose() {
   emit('close')
 }
@@ -162,6 +160,8 @@ const apiMeal = axios.create({
   headers: {Authorization:token}
 })
 
+const emit = defineEmits(['close'])
+
 // Добавление рецепта в милплан 
 const addRecipe = async (recipeId) => {
   try{
@@ -170,7 +170,6 @@ const addRecipe = async (recipeId) => {
       recipe_id: recipeId,
       order: props.order
     })
-    console.log("success")
     emitClose();
   }
   catch(err){
