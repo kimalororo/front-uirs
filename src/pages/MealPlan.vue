@@ -1,166 +1,180 @@
 <template>
-  <div class="meal-planner">
-    <!-- Левая картинка -->
-    <div class="image-container">
-      <img :src="plateImage" alt="Планировщик питания" />
-    </div>
+  <div v-if="token">
+    <div class="meal-planner">
+      <!-- Левая картинка -->
+      <div class="image-container">
+        <img :src="plateImage" alt="Планировщик питания" />
+      </div>
 
-    <!-- Правая часть: заголовок, контролы, календарь, период -->
-    <div class="planner">
-      <h1>Персональный планировщик питания</h1> 
-      <my-button 
-        class="planner-create" 
-        variant="filled" 
-        color="nvb"
-        @click="openName"
-      >
-        Добавить план
-      </my-button>
-      <div v-if="showName" class="planner-name">
-        <my-input
-          class="planName"
-          placeholder="Введите название плана" 
-          :disableScale="true"
-          v-model="newPlanName"
-        />
-        <p class="closeName" @click="closeName">✖</p>
+      <!-- Правая часть: заголовок, контролы, календарь, период -->
+      <div class="planner">
+        <h1>Персональный планировщик питания</h1> 
         <my-button 
           class="planner-create" 
           variant="filled" 
           color="nvb"
-          @click="createPlan"
+          @click="openName"
         >
-          Создать план
+          Добавить план
         </my-button>
-      </div>
-
-      <div class="planner-body">
-        <div class="left">
-          <!-- Выбор месяца и кнопка -->
-          <div class="controls">
-            <label>
-              Месяц
-              <select v-model="selectedMonth">
-                <option
-                  v-for="m in months"
-                  :key="m.value"
-                  :value="m.value"
-                >{{ m.label }}</option>
-              </select>
-            </label>
-            <my-button variant="filled" color="nvb" @click="generateCalendar">
-              Показать
-            </my-button>
-          </div>
-
-          <!-- Поле выбранного периода -->
-          <div class="selected-period">
-            <label>Выбранный период</label>
-            <input type="text" class="shadow" :value="periodText" readonly />
-          </div>
+        <div v-if="showName" class="planner-name">
+          <my-input
+            class="planName"
+            placeholder="Введите название плана" 
+            :disableScale="true"
+            v-model="newPlanName"
+          />
+          <p class="closeName" @click="closeName">✖</p>
+          <my-button 
+            class="planner-create" 
+            variant="filled" 
+            color="nvb"
+            @click="createPlan"
+          >
+            Создать план
+          </my-button>
         </div>
 
-        <!-- Календарь -->
-        <div class="calendar shadow">
-          <div class="weekdays">
-            <div v-for="day in weekdays" :key="day" class="weekday">
-              {{ day }}
+        <div class="planner-body">
+          <div class="left">
+            <!-- Выбор месяца и кнопка -->
+            <div class="controls">
+              <label>
+                Месяц
+                <select v-model="selectedMonth">
+                  <option
+                    v-for="m in months"
+                    :key="m.value"
+                    :value="m.value"
+                  >{{ m.label }}</option>
+                </select>
+              </label>
+              <my-button variant="filled" color="nvb" @click="generateCalendar">
+                Показать
+              </my-button>
+            </div>
+
+            <!-- Поле выбранного периода -->
+            <div class="selected-period">
+              <label>Выбранный период</label>
+              <input type="text" class="shadow" :value="periodText" readonly />
             </div>
           </div>
-          <div class="weeks">
-            <div v-for="(week, wIdx) in calendar" :key="wIdx" class="week">
-              <div
-                v-for="day in week"
-                :key="day.date.toISOString()"
-                class="day"
-                :class="{ 
-                  'other-month': !day.isCurrentMonth,
-                  'selected': day.isSelected 
-                }"
-                @click="selectDate(day)"
-              >
-                {{ day.date.getDate() }}
+
+          <!-- Календарь -->
+          <div class="calendar shadow">
+            <div class="weekdays">
+              <div v-for="day in weekdays" :key="day" class="weekday">
+                {{ day }}
+              </div>
+            </div>
+            <div class="weeks">
+              <div v-for="(week, wIdx) in calendar" :key="wIdx" class="week">
+                <div
+                  v-for="day in week"
+                  :key="day.date.toISOString()"
+                  class="day"
+                  :class="{ 
+                    'other-month': !day.isCurrentMonth,
+                    'selected': day.isSelected 
+                  }"
+                  @click="selectDate(day)"
+                >
+                  {{ day.date.getDate() }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    </div>
-      <!-- Сетка блюд -->
-      <div class="meals-grid" v-if="displayDays.length">
-        <!-- Шапка: даты -->
-        <div class="header-row">
-          <div class="corner-cell"></div>
-          <div
-            v-for="day in displayDays"
-            :key="keyOf(day)"
-            class="day-cell"
-          >
-            <div class="date-text">{{ keyOf(day) }}</div>
-          </div>
-        </div>
-
-        <!-- Ряды блюд №1…4 -->
-        <div
-          v-for="row in 4"
-          :key="row"
-          class="meal-row"
-        >
-          <div class="row-label">
-            Блюдо <br /> № {{ row }}
-          </div>
-          <div
-            v-for="day in displayDays"
-            :key="keyOf(day)"
-            class="meal-cell"
-            @mouseenter="() => { hoveredCell.row = row; hoveredCell.key = keyOf(day) }"
-            @mouseleave="() => { hoveredCell.row = null; hoveredCell.key = null }"
-          >
-            <template v-if="meals[row][ keyOf(day) ]">
-              <img
-                :src="meals[row][ keyOf(day) ].image"
-                class="meal-img"
-                alt=""
-              />
-              <div class="meal-title">
-                {{ meals[row][ keyOf(day) ].title }}
-              </div>
-               <div class="meal-actions">
-                <button
-                  class="action-btn edit-btn"
-                  @click.stop="openFindRecipe(
-                      selectedPlanId,
-                      keyOf(day),
-                      row,
-                      meals[row][ keyOf(day) ].id  // передаём ID существующей записи
-                  )"
-                >🔄</button>
-                <button
-                  class="action-btn delete-btn"
-                  @click.stop="deleteRecipe(meals[row][ keyOf(day)].id, selectedPlanId)"
-                >🗑️</button>
-              </div>
-            </template>
-            <template v-else>
-              <button
-                v-if="hoveredCell.row === row && hoveredCell.key === keyOf(day)"
-                class="add-btn"
-                @click.stop="openFindRecipe(selectedPlanId, keyOf(day), row)"
-              >+</button>
-            </template>
-          </div>
-        </div>
       </div>
+        <!-- Сетка блюд -->
+        <div class="meals-grid" v-if="displayDays.length">
+          <!-- Шапка: даты -->
+          <div class="header-row">
+            <div class="corner-cell"></div>
+            <div
+              v-for="day in displayDays"
+              :key="keyOf(day)"
+              class="day-cell"
+            >
+              <div class="date-text">{{ keyOf(day) }}</div>
+            </div>
+          </div>
 
-      <FindRecipe
-        v-if="showFindRecipeModal"
-        :planId="modalContext.planId"
-        :date-key="modalContext.dateKey"
-        :order="modalContext.order"
-        :ex-recipe-id="modalContext.exRecipeId"
-        @close="closeFindRecipe"
-      />
+          <!-- Ряды блюд №1…4 -->
+          <div
+            v-for="row in 4"
+            :key="row"
+            class="meal-row"
+          >
+            <div class="row-label">
+              Блюдо <br /> № {{ row }}
+            </div>
+            <div
+              v-for="day in displayDays"
+              :key="keyOf(day)"
+              class="meal-cell"
+              @mouseenter="() => { hoveredCell.row = row; hoveredCell.key = keyOf(day) }"
+              @mouseleave="() => { hoveredCell.row = null; hoveredCell.key = null }"
+            >
+              <template v-if="meals[row][ keyOf(day) ]">
+                <img
+                  :src="meals[row][ keyOf(day) ].image"
+                  class="meal-img"
+                  alt=""
+                />
+                <div class="meal-title">
+                  {{ meals[row][ keyOf(day) ].title }}
+                </div>
+                <div class="meal-actions">
+                  <button
+                    class="action-btn edit-btn"
+                    @click.stop="openFindRecipe(
+                        selectedPlanId,
+                        keyOf(day),
+                        row,
+                        meals[row][ keyOf(day) ].id  // передаём ID существующей записи
+                    )"
+                  >🔄</button>
+                  <button
+                    class="action-btn delete-btn"
+                    @click.stop="deleteRecipe(meals[row][ keyOf(day)].id, selectedPlanId)"
+                  >🗑️</button>
+                </div>
+              </template>
+              <template v-else>
+                <button
+                  v-if="hoveredCell.row === row && hoveredCell.key === keyOf(day)"
+                  class="add-btn"
+                  @click.stop="openFindRecipe(selectedPlanId, keyOf(day), row)"
+                >+</button>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <FindRecipe
+          v-if="showFindRecipeModal"
+          :planId="modalContext.planId"
+          :date-key="modalContext.dateKey"
+          :order="modalContext.order"
+          :ex-recipe-id="modalContext.exRecipeId"
+          @close="closeFindRecipe"
+        />
+  </div>
+  <div v-else class="unluck">
+    <h1>К сожалению, вам нужно зарегистрироваться для того, чтобы составлять себе планы питания</h1>
+    <h2 style="margin-top: 10%;">Вы можете сделать это здесь</h2>
+    <my-button  
+    style="margin-top: 24px;"
+      variant="filled" 
+      color="nvb"
+      @click="$router.push('/auth')"
+    >
+    Зарегистрироваться
+    </my-button>
+  </div>
 </template>
 
 <script setup>
@@ -234,12 +248,22 @@ async function initializeWeekAndPlans() {
   try {
     const { data } = await api.get('')
     plans.value = data
-    if (plans.value.length) {
-      selectedPlanId.value = plans.value[0].id
-      loadMealsForPlan(plans.value[0])
+
+    // если у пользователя ещё нет ни одного плана — создаём автоматически
+    if (plans.value.length === 0) {
+      const defaultName = 'Мой план питания'
+      const { data: newPlan } = await api.post('', { name: defaultName })
+      plans.value.push(newPlan)
+      selectedPlanId.value = newPlan.id
+      loadMealsForPlan(newPlan)
+      return
     }
+
+    // иначе просто подгружаем первый
+    selectedPlanId.value = plans.value[0].id
+    loadMealsForPlan(plans.value[0])
   } catch (e) {
-    console.error('Ошибка при получении планов', e)
+    console.error('Ошибка при получении или создании плана', e)
   }
 }
 const selectedDays = computed(() => {
@@ -288,9 +312,11 @@ function fullImageUrl(path) {
 function openName() { showName.value = true }
 function closeName() { showName.value = false }
 
+const token    = localStorage.getItem('token')
+
 const api = axios.create({
   baseURL: 'https://mandrikov-ad.ru:8443/api/v1/mealplan',
-  headers: { Authorization: localStorage.getItem('token') }
+  headers: { Authorization: token }
 })
 
 // Создать новый план
@@ -645,5 +671,9 @@ async function deleteRecipe(objectId, planId) {
 }
 .delete-btn{
   color:red
+}
+.unluck{
+  text-align: center;
+  overflow: visible;
 }
 </style>
