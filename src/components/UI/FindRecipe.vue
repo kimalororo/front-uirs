@@ -1,7 +1,9 @@
 <template>
   <div class="modal-overlay" @click.self="emitClose">
     <div class="modal-window" ref="modalWindow">
-        <h1 class="page-title">Добавить рецепт на день {{ dateKey }}</h1>
+        <h1 class="page-title">
+          {{ exRecipeId ? 'Заменить рецепт' : 'Добавить рецепт' }} на день {{ dateKey }}
+        </h1>
         <!-- Панель фильтров -->
         <div class="controls">
         <MyInput
@@ -97,8 +99,8 @@
             </div>
             <my-button 
             class="add" variant="filled" color="nvb"
-            @click="addRecipe(r.id)">
-              Добавить
+            @click="saveRecipe(r.id)">
+              {{ exRecipeId ? 'Заменить' : 'Добавить' }}
             </my-button>
             </div>
         </div>
@@ -137,6 +139,10 @@ const props = defineProps({
   order: {
     type: Number,
     default: null
+  },
+  exRecipeId: {
+    type: Number,
+    default: null
   }
 })
 
@@ -163,19 +169,32 @@ const apiMeal = axios.create({
 const emit = defineEmits(['close'])
 
 // Добавление рецепта в милплан 
-const addRecipe = async (recipeId) => {
-  try{
-    const url = `/${props.planId}/days/${props.dateKey}/recipes`;
-    const response = await apiMeal.post(url, {
-      recipe_id: recipeId,
-      order: props.order
-    })
-    emitClose();
-  }
-  catch(err){
-    console.log("Ошибка при добавлении рецепта в план", err)
-  }
-}
+ const saveRecipe = async (recipeId) => {
+   try {
+     if (props.exRecipeId) {
+       // замена существующей записи
+       await apiMeal.patch(
+        `/${props.planId}/recipes/${props.exRecipeId}`,
+        {
+           recipe_id: recipeId,
+           order:       props.order
+        }
+      )} 
+      else {
+       // новое добавление
+       await apiMeal.post(
+         `/${props.planId}/days/${props.dateKey}/recipes`,
+         {
+          recipe_id: recipeId,
+           order:       props.order
+         }
+       )
+      }
+     emitClose()
+   } catch (err) {
+     console.error("Ошибка при сохранении рецепта в план", err)
+   }
+ }
 
 // Состояние рецептов
 const recipes    = ref([])

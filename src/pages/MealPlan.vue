@@ -126,6 +126,21 @@
               <div class="meal-title">
                 {{ meals[row][ keyOf(day) ].title }}
               </div>
+               <div class="meal-actions">
+                <button
+                  class="action-btn edit-btn"
+                  @click.stop="openFindRecipe(
+                      selectedPlanId,
+                      keyOf(day),
+                      row,
+                      meals[row][ keyOf(day) ].id  // передаём ID существующей записи
+                  )"
+                >🔄</button>
+                <button
+                  class="action-btn delete-btn"
+                  @click.stop="deleteRecipe(meals[row][ keyOf(day)].id, selectedPlanId)"
+                >🗑️</button>
+              </div>
             </template>
             <template v-else>
               <button
@@ -143,6 +158,7 @@
         :planId="modalContext.planId"
         :date-key="modalContext.dateKey"
         :order="modalContext.order"
+        :ex-recipe-id="modalContext.exRecipeId"
         @close="closeFindRecipe"
       />
 </template>
@@ -183,7 +199,12 @@ const newPlanName = ref('')
 
 // Модалка поиска рецепта
 const showFindRecipeModal = ref(false)
-const modalContext = reactive({ planId: null, dateKey: '', order: null })
+const modalContext = reactive({
+    planId: null,
+    dateKey: '',
+    order: null,
+    exRecipeId: null    
+})
 
 // Отображение периода
 const periodText = computed(() => {
@@ -293,7 +314,7 @@ onMounted(async () => {
   generateCalendar()
   initializeWeekAndPlans()
 })
-
+ 
 // При смене плана — обновить блюда
 watch(selectedPlanId, id => {
   const plan = plans.value.find(p => p.id === id)
@@ -309,6 +330,7 @@ function loadMealsForPlan(plan) {
       const row = rec.order
       if (meals[row]) {
         meals[row][key] = {
+          id: rec.id,
           image: fullImageUrl(rec.preview),
           title: rec.recipe_title
         }
@@ -410,13 +432,13 @@ function updateSelection() {
   )
 }
 
-// Открыть/закрыть модалку FindRecipe
-function openFindRecipe(planId, dayKey, order) {
-  modalContext.planId = planId
-  modalContext.dateKey = convertDmyToYmd(dayKey)
-  modalContext.order = order
-  showFindRecipeModal.value = true
-}
+  function openFindRecipe(planId, dateKey, order, exRecipeId = null) {
+    modalContext.planId    = planId
+    modalContext.dateKey   = convertDmyToYmd(dateKey)
+    modalContext.order     = order
+    modalContext.exRecipeId= exRecipeId
+    showFindRecipeModal.value = true
+ }
 async function closeFindRecipe() {
   showFindRecipeModal.value = false;
   const { data: freshPlan } = await api.get(`/${selectedPlanId.value}`);
@@ -431,6 +453,24 @@ function convertDmyToYmd(dmy) {
   const year = selectedMonth.value.split('-')[0]
   return `${year}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`
 }
+
+function changeRecipe(planId, dateKey, order) {
+  openFindRecipe(planId, dateKey, order)
+}
+
+async function deleteRecipe(objectId, planId) {
+  try {
+    await api.delete(`/${planId}/recipes/${objectId}`)
+    const { data: freshPlan } = await api.get(`/${planId}`)
+    const idx = plans.value.findIndex(p => p.id === freshPlan.id)
+    if (idx !== -1) plans.value[idx] = freshPlan
+    loadMealsForPlan(freshPlan)
+    toast.success('Рецепт удалён')
+  } catch (e) {
+    toast.error('Ошибка удаления рецепта')
+    console.error(e)
+  }
+}
 </script>
 
 <style scoped>
@@ -441,7 +481,11 @@ function convertDmyToYmd(dmy) {
   padding: 20px;
   overflow: visible;
 }
-.image-container img { width: 400px;  border-radius: 8px; }
+.image-container img 
+{ 
+  width: 400px;  
+  border-radius: 8px; 
+}
 
 .planner { flex: 1; display: flex; flex-direction: column; gap: 20px; }
 .planner-create 
@@ -581,5 +625,25 @@ function convertDmyToYmd(dmy) {
   border-radius: 50%; 
   font-size: 28px; 
   cursor: pointer;
+}
+.meal-card { position: relative; }
+.meal-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+}
+.action-btn {
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+.delete-btn{
+  color:red
 }
 </style>
