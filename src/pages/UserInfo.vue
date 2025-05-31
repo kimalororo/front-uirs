@@ -62,7 +62,7 @@
 
   <!-- Новые разделы -->
   <div class="recipe-overview">
-    <div class="overview-card" @click="goToSaved">
+    <div class="overview-card" @click="$router.push('/likedList')">
       <img src="../components/icons/savedRecipes.jpg" alt="Сохраненные рецепты" />
       <div class="overview-title">Сохранённые рецепты</div>
     </div> 
@@ -99,9 +99,9 @@ const stats = ref({ published: 0, liked: 0, drafts: 0 })
 const api = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user', headers: { Authorization: token } })
 const updLoginApi = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user', headers: { 'Content-Type': 'multipart/form-data', Authorization: token } })
 const updPasswordApi = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/user/change-password', headers: { Authorization: token } })
-const apiCounts  = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/recipe/my', headers: { Authorization: token }})
+const apiMyRecipes = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/recipe/my', headers: { Authorization: token }})
+const apiAllRecipes = axios.create({ baseURL: 'https://mandrikov-ad.ru:8443/api/v1/recipe', headers: { Authorization: token }})
 
-// Функции загрузки данных 
 const fetchUser = async () => {
   try {
     const { data } = await api.get('')
@@ -113,40 +113,28 @@ const fetchUser = async () => {
 
 async function fetchStats() {
   try {
-    // 1) Опубликованные
-    const resPub = await apiCounts.get('', {
-      params: { is_published: true, page: 1, limit: 1 }
+    // 1) Опубликованные рецепты пользователя
+    const resPub = await apiMyRecipes.get('', {
+      params: { is_published: true, page: 1, limit: 10 }
     })
-    stats.value.published = Number(
-      resPub.headers['x-total-count']
-      || resPub.data.meta?.total
-      || 0
-    )
+    stats.value.published = resPub.data.results
     
-    // 2) Черновики
-    const resDraft = await apiCounts.get('', {
+    // 2) Черновики пользователя
+    const resDraft = await apiMyRecipes.get('', {
       params: { is_published: false, page: 1, limit: 1 }
     })
-    stats.value.drafts = Number(
-      resDraft.headers['x-total-count']
-      || resDraft.data.meta?.total
-      || 0
-    )
+    stats.value.drafts = resDraft.data.results
     
-    // 3) Понравившиеся
-    // Предполагаем, что бэкенд поддерживает фильтр liked=true
-    const resLiked = await apiCounts.get('', {
+    // 3) Понравившиеся (все рецепты, которые лайкнул пользователь)
+    const resLiked = await apiAllRecipes.get('', {
       params: { liked: true, page: 1, limit: 1 }
     })
-    stats.value.liked = Number(
-      resLiked.headers['x-total-count']
-      || resLiked.data.meta?.total
-      || 0
-    )
+    stats.value.liked =resLiked.data.results
   } catch (e) {
     console.error('Не удалось получить статистику рецептов:', e)
   }
 }
+
 
 // Действия пользователей
 const toggleLoginForm    = () => { showLoginForm.value = !showLoginForm.value; showPasswordForm.value = false }

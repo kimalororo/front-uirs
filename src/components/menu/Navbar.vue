@@ -18,6 +18,7 @@
           color="nvb"
           @click="$router.push('/userInfo')"
           class="height"
+          v-if="token"
         >
           <template #icon>
             <img src="../icons/recipe.png" alt="Мои рецепты" />
@@ -42,6 +43,7 @@
           color="nvb"
           @click="$router.push('/plan')"
           class="height"
+          v-if="token"
         >
           <template #icon>
             <img src="../icons/calendar.png" alt="Планировщик питания" />
@@ -65,30 +67,27 @@
   </template>
   
   <script setup>
+  const token = localStorage.getItem('token')
   </script>
   
-  <style scoped>
-  .navbar {
-    margin-top: 30px;
-    height: 100vh;
-    width: 20%;
-    display: flex;
-    flex-direction: column;
-    overflow: visible;
-    
-  }
-  
-  .navbar__btns {
-    display: flex;
-    flex-direction: column;
-    margin-left: 20px;
-    margin-top: 20px;
-    row-gap: 40px;
-    overflow: visible;
-  }
-  
-  .height{
-    height: 100px;
-  }
-  </style>
-  
+<style scoped>
+.navbar {
+  width: clamp(200px, 20%, 100%);
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.navbar__btns {
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+  row-gap: 30px;
+  overflow: visible;
+}
+
+.height {
+  height: clamp(60px, 10vh, 120px);
+}
+</style>

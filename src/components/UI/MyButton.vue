@@ -46,7 +46,7 @@ export default {
   justify-content: flex-start;
   padding: 8px 16px;
   border-radius: 10px;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;

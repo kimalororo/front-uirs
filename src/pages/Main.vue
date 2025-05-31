@@ -145,7 +145,7 @@ import MyMultiSelect from '@/components/UI/MyMultiSelect.vue'
 
 // API setup
 const API_HOST = 'https://mandrikov-ad.ru:8443'
-const token    = localStorage.getItem('token')
+const token = localStorage.getItem('token')
 const api = axios.create({
   baseURL: `${API_HOST}/api/v1/recipe`,
   headers:    { Authorization: token },

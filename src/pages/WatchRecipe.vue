@@ -63,16 +63,36 @@
               alt="heart"
             />
           </li>
-          <li v-if="recipe.rating !== undefined">
-            Рейтинг – {{ recipe.rating }}/5 ⭐
+          <li class="plus_icn">
+            <p v-if="!recipe.is_liked_by_me">Сохранить</p>
+            <p v-if="recipe.is_liked_by_me">Убрать из сохраненных</p>
+            <button @click="toggleLike" class="like-button">
+              <img
+                :src="recipe.is_liked_by_me ? brokenHeart : heart"
+                alt="../components/icons/heart.png"
+                class="like-icon"
+              />
+            </button>
           </li>
         </ul>
         <div class="card_footer">
-          <p class="card__link">{{recipe.author.login}}</p>
-          <p class="date">
-            Дата создания: {{ normalizeDate(recipe.published_at) }}
-          </p>
+          <my-button
+            variant="outline"
+            color="dark"
+            v-if="isAuthor"
+            @click="$router.push(`/edit/${recipe.id}`)"
+            class="edit"
+          >
+            ✏️ Редактировать
+          </my-button>
+          <div class="author-info">
+            <p class="card__link">{{ recipe.author.login }}</p>
+            <p class="date">
+              Дата создания: {{ normalizeDate(recipe.published_at) }}
+            </p>
+          </div>
         </div>
+
       </div>
     </article>
 
@@ -140,14 +160,21 @@ import axios from 'axios'
 import { useRoute } from 'vue-router'
 import defaultIcon from '@/components/icons/defaultIngredient.png'
 import RecipeComments from '@/components/menu/RecipeComments.vue'
+import heart from '../components/icons/heart.png'
+import brokenHeart from '../components/icons/brokenHeart.png'
 
 const route = useRoute()
 const id = route.params.id
 const recipe = ref(null)
 const servings = ref(3)
 const API_HOST = 'https://mandrikov-ad.ru:8443'
+const token = localStorage.getItem('token')
 const api = axios.create({
   baseURL: `${API_HOST}/api/v1/recipe`
+})
+const likeApi = axios.create({
+    baseURL: `${API_HOST}/api/v1/like`, 
+    headers: { Authorization: token }
 })
 
 function getPhotoUrl(path) {
@@ -179,23 +206,34 @@ const totalTime = computed(
     recipe.value?.stages.reduce((sum, s) => sum + s.minutes, 0) || 0
 )
 
+const isAuthor = computed(() => {
+  const userRaw = localStorage.getItem('user') 
+  if (!userRaw) return false
+
+  try {
+    const user = JSON.parse(userRaw)
+    return user.username === recipe.value?.author?.login
+  } catch (e) {
+    console.error('Ошибка парсинга currentUser:', e)
+    return false
+  }
+})
+
 function normalizeDate(date) {
   const d = new Date(date)
   return d.toLocaleDateString('ru-RU')
 }
-
 const toggleLike = async () => {
   if (!recipe.value) return
   try {
-    const action = recipe.value.is_liked_by_me ? 'unlike' : 'like'
-    await api.post(`/${id}/${action}`)
+    await likeApi.post(`/${recipe.value.id}`)
     recipe.value.is_liked_by_me = !recipe.value.is_liked_by_me
-    recipe.value.likes_count +=
-      recipe.value.is_liked_by_me ? 1 : -1
+    recipe.value.likes_count += recipe.value.is_liked_by_me ? 1 : -1
   } catch (err) {
     console.error(err)
   }
 }
+
 
 const sortedStages = computed(() =>
   recipe.value?.stages
@@ -253,6 +291,7 @@ const adjustedIngredients = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow: visible;
 }
 
 .card__title {
@@ -287,6 +326,7 @@ const adjustedIngredients = computed(() => {
   align-items: center;
   gap: 6px;
   margin-bottom: 10px;
+  overflow: visible;
 }
 
 .icons_clr {
@@ -295,12 +335,21 @@ const adjustedIngredients = computed(() => {
 }
 
 .card_footer {
-  margin-top: auto;
   display: flex;
-  gap: 14px;
-  justify-content: flex-end;
+  justify-content: space-between; 
   align-items: center;
+  margin-top: auto;
+  overflow: visible;
 }
+.edit{
+  overflow: visible;
+}
+.author-info {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
 
 .card__link {
   text-decoration: underline;
@@ -310,6 +359,32 @@ const adjustedIngredients = computed(() => {
 .date {
   font-size: 0.9rem;
   color: #444;
+}
+
+.like-button {
+  background-color: transparent;
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease, border-color 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.like-button:hover {
+  transform: scale(1.1);
+  border-color: #6a1b9a; 
+  background: #691b9a6a;
+}
+
+.like-icon {
+  width: 32px;
+  height: 32px;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 /* Ингредиенты */

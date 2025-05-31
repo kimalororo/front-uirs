@@ -168,11 +168,9 @@ const apiMeal = axios.create({
 
 const emit = defineEmits(['close'])
 
-// Добавление рецепта в милплан 
  const saveRecipe = async (recipeId) => {
    try {
      if (props.exRecipeId) {
-       // замена существующей записи
        await apiMeal.patch(
         `/${props.planId}/recipes/${props.exRecipeId}`,
         {
@@ -181,7 +179,6 @@ const emit = defineEmits(['close'])
         }
       )} 
       else {
-       // новое добавление
        await apiMeal.post(
          `/${props.planId}/days/${props.dateKey}/recipes`,
          {

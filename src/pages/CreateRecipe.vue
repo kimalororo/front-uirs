@@ -369,9 +369,10 @@ const GetIngredients = async () => {
     if (recipe.value.image) {
       formData.append('preview_image', recipe.value.image);
     }
-    recipe.value.stages.forEach(stage => {
+    recipe.value.stages.forEach((stage, index) => {
       if (stage.image) {
-        formData.append('stage_images', stage.image);
+        const renamed = new File([stage.image], `${index}`, { type: stage.image.type });
+        formData.append('stage_images', renamed);
       }
     });
     try{
@@ -380,6 +381,9 @@ const GetIngredients = async () => {
         console.log('Рецепт успешно создан!', response.data);
       })
     }catch(error) {
+        for (const pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
       console.error('Ошибка при создании рецепта:', error);
     }
   };
